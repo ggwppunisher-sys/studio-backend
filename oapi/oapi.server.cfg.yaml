@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
+package: gen
+
+generate:
+  chi-server: true
+  strict-server: true
+  models: true
+
+output: internal/transport/apiserver/gen/api.go
+
+output-options:
+  nullable-type: false
+  skip-prune: true

@@ -1,6 +1,0 @@
-package: apiserver
-output: server.gen.go
-generate:
-  chi-server: true
-  models: true
-  
