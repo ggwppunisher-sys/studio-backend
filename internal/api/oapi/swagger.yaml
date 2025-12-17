@@ -1,0 +1,84 @@
+openapi: 3.0.3
+info: 
+  title: Telegram Bot Admin API
+  description: Админка для управления ботом и пользователями 
+  version: 1.0.0
+  
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Локальный сервер разработки 
+
+paths:
+  /admin/users:
+    get:
+      operationId: getAdminUsers
+      summary: Получить список пользователей бота 
+      tags: [admin]
+      parameters: 
+        - name: limit 
+          in: query 
+          schema:
+            type: integer
+            default: 50
+        - name: offset 
+          in: query 
+          schema: 
+            type: integer 
+            default: 0
+      responses: 
+        '200':
+          description: Список пользователей 
+          content: 
+            application/json:
+              schema: 
+                type: array 
+                items: 
+                  $ref: '#/components/schemas/BotUser'
+
+  /admin/users/{user_id}:
+    put: 
+      summary: Обновить данный пользователя
+      tags: [admin]
+      parameters:
+        - name: user_id
+          in: path 
+          required: true 
+          schema: 
+            type: integer 
+      requestBody: 
+        required: true 
+        content: 
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/UpdateBotUserRequest'
+      responses:
+        '200':
+          description: Пользователь обновлен 
+
+components:
+  schemas: 
+    BotUser:
+      type : object 
+      properties: 
+        TgId:
+          type: string 
+          example: "ugawen"
+        TgChatId:
+          type: integer 
+          example: 123456
+        ListOfRecordings: 
+          type : string 
+          example: "21 ноября в 16:00"
+
+    UpdateBotUserRequest:
+      type: object
+      properties:
+        TgId:
+          type: string
+        TgChatId:
+          type: integer
+        ListOfRecordings:
+          type: string     
+
+
