@@ -8,4 +8,4 @@ generate-oapi:
 	go tool oapi-codegen -config oapi/oapi.client.cfg.yaml oapi/openapi.yaml
 
 run:
-	@go run cmd/main.go --env .env
+	@go run cmd/main.go --env example.env
