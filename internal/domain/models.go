@@ -6,15 +6,21 @@ import (
 )
 
 type User struct {
-	TgId             string // Telegram UserName
-	TgChatId         string // Telegram chat id
-	ListOfRecordings string // List of recordings
+	Id int
+
+	TgUserInfo
+}
+
+type TgUserInfo struct {
+	TgId      int64
+	FirstName string
+	LastName  string
+	Username  string
+	TgChatId  int64
 }
 
 type Engineer struct {
-	TgId             string    // Telegram UserName
-	FreeTime         time.Time // Free time of Sound Engineer
-	ListOfRecordings string    // List of recordings
+	User
 }
 
 type Schedule struct {
@@ -47,10 +53,10 @@ type BookingScheduleUser struct {
 
 func (u *User) Validate() error {
 	if u.TgId == "" {
-		return errors.New("Incorrectly entered field")
+		return errors.New("incorrectly entered field")
 	}
 	if u.ListOfRecordings == "" {
-		return errors.New("Incorrectly entered field")
+		return errors.New("incorrectly entered field")
 	}
 	return nil
 }

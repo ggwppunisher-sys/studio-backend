@@ -6,11 +6,11 @@ info:
   
 
 servers:
-  - url: http://localhost:8080/api/v1
+  - url: http://localhost:8080
     description: Локальный сервер разработки 
 
 paths:
-  /admin/users:
+  /api/v1/admin/users:
     get:
       operationId: getAdminUsers
       summary: Получить список пользователей бота 

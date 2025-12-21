@@ -22,7 +22,7 @@ func Run(ctx context.Context, cfg config.Config) error {
 
 	go func() {
 		<-ctx.Done()
-		err := server.Shutdown(ctx)
+		err = server.Shutdown(ctx)
 		if err != nil {
 			slog.Error("failed to shutdown", "error", err)
 		}
