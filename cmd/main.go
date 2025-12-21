@@ -14,7 +14,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const appName = "phone-calls-api"
+const appName = "studio-backend"
 
 var version = "v0.1.0" // version передается через -ldflags.
 
