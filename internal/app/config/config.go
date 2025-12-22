@@ -25,4 +25,5 @@ func New(appName, version string) (Config, error) {
 type ServerConfig struct {
 	Port         string        `env:"HTTP_PORT"`
 	WriteTimeout time.Duration `env:"HTTP_WRITE_TIMEOUT"`
+	ReadTimeout  time.Duration `env:"HTTP_READ_TIMEOUT"`
 }

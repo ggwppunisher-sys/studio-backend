@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	Id int
+	Id int64
 
 	TgUserInfo
 }
@@ -52,19 +52,12 @@ type BookingScheduleUser struct {
 }
 
 func (u *User) Validate() error {
-	if u.TgId == "" {
-		return errors.New("incorrectly entered field")
-	}
-	if u.ListOfRecordings == "" {
-		return errors.New("incorrectly entered field")
-	}
+
 	return nil
 }
 
 func (e *Engineer) Validate() error {
-	if e.TgId == "" {
-		return errors.New("Incorrectly entered field")
-	}
+
 	return nil
 }
 
