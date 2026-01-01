@@ -48,4 +48,9 @@ const (
 
 var (
 	ErrNotImplemented = ErrInternal.withCode("not_implemented")
+
+	ErrInvalidTgId       = ErrBadPayload.withCode("invalid_tg_id")
+	ErrInvalidTgChatId   = ErrBadPayload.withCode("invalid_tg_chat_id")
+	ErrInvalidUserId     = ErrBadPayload.withCode("invalid_user_id")
+	ErrInvalidEngineerId = ErrBadPayload.withCode("invalid_engineer_id")
 )
