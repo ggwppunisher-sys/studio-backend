@@ -23,7 +23,9 @@ func New(appName, version string) (Config, error) {
 }
 
 type ServerConfig struct {
-	Port         string        `env:"HTTP_PORT"`
-	WriteTimeout time.Duration `env:"HTTP_WRITE_TIMEOUT"`
-	ReadTimeout  time.Duration `env:"HTTP_READ_TIMEOUT"`
+	Port           string        `env:"HTTP_PORT"             envDefault:"8080"`
+	WriteTimeout   time.Duration `env:"HTTP_WRITE_TIMEOUT"    envDefault:"20s"`
+	ReadTimeout    time.Duration `env:"HTTP_READ_TIMEOUT"     envDefault:"15s"`
+	IdleTimeout    time.Duration `env:"HTTP_IDLE_TIMEOUT"     envDefault:"30s"`
+	MaxHeaderBytes int           `env:"HTTP_MAX_HEADER_BYTES" envDefault:"1048576"`
 }

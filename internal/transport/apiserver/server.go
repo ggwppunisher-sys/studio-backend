@@ -5,12 +5,14 @@ import (
 	"studio-backend/internal/app/config"
 )
 
-func NewServer(handler http.Handler, cfg config.ServerConfig) (*http.Server, error) {
+func NewServer(cfg config.ServerConfig, handler http.Handler) (*http.Server, error) {
 	return &http.Server{
-		Handler: handler,
+		Addr:           cfg.Port,
+		WriteTimeout:   cfg.WriteTimeout,
+		ReadTimeout:    cfg.ReadTimeout,
+		IdleTimeout:    cfg.IdleTimeout,
+		MaxHeaderBytes: cfg.MaxHeaderBytes,
 
-		Addr:         cfg.Port,
-		WriteTimeout: cfg.WriteTimeout,
-		ReadTimeout:  cfg.ReadTimeout,
+		Handler: handler,
 	}, nil
 }

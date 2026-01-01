@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+
 	"studio-backend/internal/app/config"
 	"studio-backend/internal/transport/apiserver"
 )
 
 func Run(ctx context.Context, cfg config.Config) error {
-
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 	})
-	server, err := apiserver.NewServer(handler, cfg.Server)
+	server, err := apiserver.NewServer(cfg.Server, handler)
 	if err != nil {
 		return fmt.Errorf("failed to init server: %w", err)
 	}
