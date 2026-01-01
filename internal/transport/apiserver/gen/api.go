@@ -12,54 +12,117 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// BotUser defines model for BotUser.
-type BotUser struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// ObjError Standard error
+type ObjError struct {
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	RequestId string `json:"request_id"`
 }
 
-// UpdateBotUserRequest defines model for UpdateBotUserRequest.
-type UpdateBotUserRequest struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// ObjUser Representation of user
+type ObjUser struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  *int64  `json:"tg_chat_id,omitempty"`
+	TgId      *int64  `json:"tg_id,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
-// GetAdminUsersParams defines parameters for GetAdminUsers.
-type GetAdminUsersParams struct {
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+// UserId defines model for UserId.
+type UserId = openapi_types.UUID
+
+// RespCreateUser defines model for RespCreateUser.
+type RespCreateUser struct {
+	Data struct {
+		// UserId Unique user identifier (UUID)
+		UserId openapi_types.UUID `json:"user_id"`
+	} `json:"data"`
 }
 
-// PutAdminUsersUserIdJSONRequestBody defines body for PutAdminUsersUserId for application/json ContentType.
-type PutAdminUsersUserIdJSONRequestBody = UpdateBotUserRequest
+// RespError defines model for RespError.
+type RespError struct {
+	// Error Standard error
+	Error ObjError               `json:"error"`
+	Meta  map[string]interface{} `json:"meta"`
+}
+
+// RespGetUser defines model for RespGetUser.
+type RespGetUser struct {
+	// Data Representation of user
+	Data ObjUser `json:"data"`
+}
+
+// RespUpdateUser defines model for RespUpdateUser.
+type RespUpdateUser struct {
+	// Data Representation of user
+	Data ObjUser `json:"data"`
+}
+
+// ReqCreateUser defines model for ReqCreateUser.
+type ReqCreateUser struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  int64   `json:"tg_chat_id"`
+	TgId      int64   `json:"tg_id"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// ReqUpdateUser defines model for ReqUpdateUser.
+type ReqUpdateUser struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  *int64  `json:"tg_chat_id,omitempty"`
+	TgId      *int64  `json:"tg_id,omitempty"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// V1CreateUserJSONBody defines parameters for V1CreateUser.
+type V1CreateUserJSONBody struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  int64   `json:"tg_chat_id"`
+	TgId      int64   `json:"tg_id"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// V1CreateUserJSONRequestBody defines body for V1CreateUser for application/json ContentType.
+type V1CreateUserJSONRequestBody V1CreateUserJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Получить список пользователей бота
-	// (GET /admin/users)
-	GetAdminUsers(w http.ResponseWriter, r *http.Request, params GetAdminUsersParams)
-	// Обновить данный пользователя
-	// (PUT /admin/users/{user_id})
-	PutAdminUsersUserId(w http.ResponseWriter, r *http.Request, userId int)
+	// Create new user
+	// (POST /api/v1/users)
+	V1CreateUser(w http.ResponseWriter, r *http.Request)
+	// Fetch user by id
+	// (GET /api/v1/users/{id})
+	V1GetUser(w http.ResponseWriter, r *http.Request, id UserId)
+	// Update user info
+	// (PUT /api/v1/users/{id})
+	V1UpdateUser(w http.ResponseWriter, r *http.Request, id UserId)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
-// Получить список пользователей бота
-// (GET /admin/users)
-func (_ Unimplemented) GetAdminUsers(w http.ResponseWriter, r *http.Request, params GetAdminUsersParams) {
+// Create new user
+// (POST /api/v1/users)
+func (_ Unimplemented) V1CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Обновить данный пользователя
-// (PUT /admin/users/{user_id})
-func (_ Unimplemented) PutAdminUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
+// Fetch user by id
+// (GET /api/v1/users/{id})
+func (_ Unimplemented) V1GetUser(w http.ResponseWriter, r *http.Request, id UserId) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update user info
+// (PUT /api/v1/users/{id})
+func (_ Unimplemented) V1UpdateUser(w http.ResponseWriter, r *http.Request, id UserId) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -72,32 +135,11 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// GetAdminUsers operation middleware
-func (siw *ServerInterfaceWrapper) GetAdminUsers(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetAdminUsersParams
-
-	// ------------- Optional query parameter "limit" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "offset" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
-		return
-	}
+// V1CreateUser operation middleware
+func (siw *ServerInterfaceWrapper) V1CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAdminUsers(w, r, params)
+		siw.Handler.V1CreateUser(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -107,22 +149,47 @@ func (siw *ServerInterfaceWrapper) GetAdminUsers(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
-// PutAdminUsersUserId operation middleware
-func (siw *ServerInterfaceWrapper) PutAdminUsersUserId(w http.ResponseWriter, r *http.Request) {
+// V1GetUser operation middleware
+func (siw *ServerInterfaceWrapper) V1GetUser(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
-	// ------------- Path parameter "user_id" -------------
-	var userId int
+	// ------------- Path parameter "id" -------------
+	var id UserId
 
-	err = runtime.BindStyledParameterWithOptions("simple", "user_id", chi.URLParam(r, "user_id"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "user_id", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PutAdminUsersUserId(w, r, userId)
+		siw.Handler.V1GetUser(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// V1UpdateUser operation middleware
+func (siw *ServerInterfaceWrapper) V1UpdateUser(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id UserId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1UpdateUser(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -246,57 +313,151 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/admin/users", wrapper.GetAdminUsers)
+		r.Post(options.BaseURL+"/api/v1/users", wrapper.V1CreateUser)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/admin/users/{user_id}", wrapper.PutAdminUsersUserId)
+		r.Get(options.BaseURL+"/api/v1/users/{id}", wrapper.V1GetUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/users/{id}", wrapper.V1UpdateUser)
 	})
 
 	return r
 }
 
-type GetAdminUsersRequestObject struct {
-	Params GetAdminUsersParams
+type RespCreateUserJSONResponse struct {
+	Data struct {
+		// UserId Unique user identifier (UUID)
+		UserId openapi_types.UUID `json:"user_id"`
+	} `json:"data"`
 }
 
-type GetAdminUsersResponseObject interface {
-	VisitGetAdminUsersResponse(w http.ResponseWriter) error
+type RespErrorJSONResponse struct {
+	// Error Standard error
+	Error ObjError               `json:"error"`
+	Meta  map[string]interface{} `json:"meta"`
 }
 
-type GetAdminUsers200JSONResponse []BotUser
+type RespGetUserJSONResponse struct {
+	// Data Representation of user
+	Data ObjUser `json:"data"`
+}
 
-func (response GetAdminUsers200JSONResponse) VisitGetAdminUsersResponse(w http.ResponseWriter) error {
+type RespUpdateUserJSONResponse struct {
+	// Data Representation of user
+	Data ObjUser `json:"data"`
+}
+
+type V1CreateUserRequestObject struct {
+	Body *V1CreateUserJSONRequestBody
+}
+
+type V1CreateUserResponseObject interface {
+	VisitV1CreateUserResponse(w http.ResponseWriter) error
+}
+
+type V1CreateUser200JSONResponse struct{ RespCreateUserJSONResponse }
+
+func (response V1CreateUser200JSONResponse) VisitV1CreateUserResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PutAdminUsersUserIdRequestObject struct {
-	UserId int `json:"user_id"`
-	Body   *PutAdminUsersUserIdJSONRequestBody
+type V1CreateUserdefaultJSONResponse struct {
+	Body struct {
+		// Error Standard error
+		Error ObjError               `json:"error"`
+		Meta  map[string]interface{} `json:"meta"`
+	}
+	StatusCode int
 }
 
-type PutAdminUsersUserIdResponseObject interface {
-	VisitPutAdminUsersUserIdResponse(w http.ResponseWriter) error
+func (response V1CreateUserdefaultJSONResponse) VisitV1CreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type PutAdminUsersUserId200Response struct {
+type V1GetUserRequestObject struct {
+	Id UserId `json:"id"`
 }
 
-func (response PutAdminUsersUserId200Response) VisitPutAdminUsersUserIdResponse(w http.ResponseWriter) error {
+type V1GetUserResponseObject interface {
+	VisitV1GetUserResponse(w http.ResponseWriter) error
+}
+
+type V1GetUser200JSONResponse struct{ RespGetUserJSONResponse }
+
+func (response V1GetUser200JSONResponse) VisitV1GetUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type V1GetUserdefaultJSONResponse struct {
+	Body struct {
+		// Error Standard error
+		Error ObjError               `json:"error"`
+		Meta  map[string]interface{} `json:"meta"`
+	}
+	StatusCode int
+}
+
+func (response V1GetUserdefaultJSONResponse) VisitV1GetUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type V1UpdateUserRequestObject struct {
+	Id UserId `json:"id"`
+}
+
+type V1UpdateUserResponseObject interface {
+	VisitV1UpdateUserResponse(w http.ResponseWriter) error
+}
+
+type V1UpdateUser200JSONResponse struct{ RespUpdateUserJSONResponse }
+
+func (response V1UpdateUser200JSONResponse) VisitV1UpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type V1UpdateUserdefaultJSONResponse struct {
+	Body struct {
+		// Error Standard error
+		Error ObjError               `json:"error"`
+		Meta  map[string]interface{} `json:"meta"`
+	}
+	StatusCode int
+}
+
+func (response V1UpdateUserdefaultJSONResponse) VisitV1UpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// Получить список пользователей бота
-	// (GET /admin/users)
-	GetAdminUsers(ctx context.Context, request GetAdminUsersRequestObject) (GetAdminUsersResponseObject, error)
-	// Обновить данный пользователя
-	// (PUT /admin/users/{user_id})
-	PutAdminUsersUserId(ctx context.Context, request PutAdminUsersUserIdRequestObject) (PutAdminUsersUserIdResponseObject, error)
+	// Create new user
+	// (POST /api/v1/users)
+	V1CreateUser(ctx context.Context, request V1CreateUserRequestObject) (V1CreateUserResponseObject, error)
+	// Fetch user by id
+	// (GET /api/v1/users/{id})
+	V1GetUser(ctx context.Context, request V1GetUserRequestObject) (V1GetUserResponseObject, error)
+	// Update user info
+	// (PUT /api/v1/users/{id})
+	V1UpdateUser(ctx context.Context, request V1UpdateUserRequestObject) (V1UpdateUserResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -328,39 +489,11 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
-// GetAdminUsers operation middleware
-func (sh *strictHandler) GetAdminUsers(w http.ResponseWriter, r *http.Request, params GetAdminUsersParams) {
-	var request GetAdminUsersRequestObject
+// V1CreateUser operation middleware
+func (sh *strictHandler) V1CreateUser(w http.ResponseWriter, r *http.Request) {
+	var request V1CreateUserRequestObject
 
-	request.Params = params
-
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAdminUsers(ctx, request.(GetAdminUsersRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetAdminUsers")
-	}
-
-	response, err := handler(r.Context(), w, r, request)
-
-	if err != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(GetAdminUsersResponseObject); ok {
-		if err := validResponse.VisitGetAdminUsersResponse(w); err != nil {
-			sh.options.ResponseErrorHandlerFunc(w, r, err)
-		}
-	} else if response != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// PutAdminUsersUserId operation middleware
-func (sh *strictHandler) PutAdminUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
-	var request PutAdminUsersUserIdRequestObject
-
-	request.UserId = userId
-
-	var body PutAdminUsersUserIdJSONRequestBody
+	var body V1CreateUserJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
 		return
@@ -368,18 +501,70 @@ func (sh *strictHandler) PutAdminUsersUserId(w http.ResponseWriter, r *http.Requ
 	request.Body = &body
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.PutAdminUsersUserId(ctx, request.(PutAdminUsersUserIdRequestObject))
+		return sh.ssi.V1CreateUser(ctx, request.(V1CreateUserRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PutAdminUsersUserId")
+		handler = middleware(handler, "V1CreateUser")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(PutAdminUsersUserIdResponseObject); ok {
-		if err := validResponse.VisitPutAdminUsersUserIdResponse(w); err != nil {
+	} else if validResponse, ok := response.(V1CreateUserResponseObject); ok {
+		if err := validResponse.VisitV1CreateUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// V1GetUser operation middleware
+func (sh *strictHandler) V1GetUser(w http.ResponseWriter, r *http.Request, id UserId) {
+	var request V1GetUserRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.V1GetUser(ctx, request.(V1GetUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "V1GetUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(V1GetUserResponseObject); ok {
+		if err := validResponse.VisitV1GetUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// V1UpdateUser operation middleware
+func (sh *strictHandler) V1UpdateUser(w http.ResponseWriter, r *http.Request, id UserId) {
+	var request V1UpdateUserRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.V1UpdateUser(ctx, request.(V1UpdateUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "V1UpdateUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(V1UpdateUserResponseObject); ok {
+		if err := validResponse.VisitV1UpdateUserResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

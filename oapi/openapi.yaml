@@ -1,84 +1,189 @@
-openapi: 3.0.3
-info: 
-  title: Telegram Bot Admin API
-  description: Админка для управления ботом и пользователями 
-  version: 1.0.0
-  
+openapi: "3.0.3"
+
+info:
+  title: "User Management"
+  description: "API for managing users info."
+  version: 0.0.1
 
 servers:
-  - url: http://localhost:8080
-    description: Локальный сервер разработки 
+  - url: "http://localhost:8080"
+    description: "Local development server"
+
+tags:
+  - name: "Users"
+    description: "Managing users info"
 
 paths:
-  /api/v1/admin/users:
-    get:
-      operationId: getAdminUsers
-      summary: Получить список пользователей бота 
-      tags: [admin]
-      parameters: 
-        - name: limit 
-          in: query 
-          schema:
-            type: integer
-            default: 50
-        - name: offset 
-          in: query 
-          schema: 
-            type: integer 
-            default: 0
-      responses: 
-        '200':
-          description: Список пользователей 
-          content: 
-            application/json:
-              schema: 
-                type: array 
-                items: 
-                  $ref: '#/components/schemas/BotUser'
-
-  /admin/users/{user_id}:
-    put: 
-      summary: Обновить данный пользователя
-      tags: [admin]
-      parameters:
-        - name: user_id
-          in: path 
-          required: true 
-          schema: 
-            type: integer 
-      requestBody: 
-        required: true 
-        content: 
-          application/json:
-            schema: 
-              $ref: '#/components/schemas/UpdateBotUserRequest'
+  /api/v1/users:
+    post:
+      summary: "Create new user"
+      operationId: v1CreateUser
+      description: "Creates new user with given info"
+      tags: [ "Users" ]
+      requestBody:
+        $ref: "#/components/requestBodies/ReqCreateUser"
       responses:
-        '200':
-          description: Пользователь обновлен 
+        "200":
+          $ref: "#/components/responses/RespCreateUser"
+        default:
+          $ref: "#/components/responses/RespError"
+  /api/v1/users/{id}:
+    get:
+      summary: "Fetch user by id"
+      operationId: v1GetUser
+      description: "Fetches user by id."
+      tags: [ "Users" ]
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          $ref: "#/components/responses/RespGetUser"
+        default:
+          $ref: "#/components/responses/RespError"
+    put:
+      summary: "Update user info"
+      operationId: v1UpdateUser
+      description: "Updates user info with given info"
+      tags: [ "Users" ]
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          $ref: "#/components/responses/RespUpdateUser"
+        default:
+          $ref: "#/components/responses/RespError"
 
 components:
-  schemas: 
-    BotUser:
-      type : object 
-      properties: 
-        TgId:
-          type: string 
-          example: "ugawen"
-        TgChatId:
-          type: integer 
-          example: 123456
-        ListOfRecordings: 
-          type : string 
-          example: "21 ноября в 16:00"
+  parameters:
+    UserId:
+      name: id
+      in: path
+      description: "User id (UUID)"
+      required: true
+      schema:
+        type: string
+        format: uuid
 
-    UpdateBotUserRequest:
+  schemas:
+    ObjUser:
+      description: "Representation of user"
       type: object
       properties:
-        TgId:
-          type: string
-        TgChatId:
+        tg_id:
           type: integer
-        ListOfRecordings:
-          type: string     
+          x-go-type: "int64"
+        tg_chat_id:
+          type: integer
+          x-go-type: "int64"
+        first_name:
+          type: string
+        last_name:
+          type: string
+        username:
+          type: string
 
+    ObjError:
+      description: "Standard error"
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string
+      required: [ code, message, request_id ]
 
+  requestBodies:
+    ReqCreateUser:
+      description: "Request for creating user"
+      required: true
+      content:
+        application/json:
+          schema:
+            properties:
+              tg_id:
+                type: integer
+                x-go-type: "int64"
+              tg_chat_id:
+                type: integer
+                x-go-type: "int64"
+              first_name:
+                type: string
+              last_name:
+                type: string
+              username:
+                type: string
+            required: [ tg_id, tg_chat_id ]
+
+    ReqUpdateUser:
+      description: "Request for updating user"
+      required: true
+      content:
+        application/json:
+          schema:
+            properties:
+              tg_id:
+                type: integer
+                x-go-type: "int64"
+              tg_chat_id:
+                type: integer
+                x-go-type: "int64"
+              first_name:
+                type: string
+              last_name:
+                type: string
+              username:
+                type: string
+
+  responses:
+    RespCreateUser:
+      description: "Successfully created user"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  user_id:
+                    description: "Unique user identifier (UUID)"
+                    type: string
+                    format: uuid
+                required: [ user_id ]
+            required: [ data ]
+
+    RespGetUser:
+      description: "Successfully fetched user"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/ObjUser"
+            required: [ data ]
+
+    RespUpdateUser:
+      description: "Successfully updated user"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/ObjUser"
+            required: [ data ]
+
+    RespError:
+      description: "Стандартный ответ с ошибкой"
+      content:
+        application/json:
+          schema:
+            properties:
+              error:
+                $ref: "#/components/schemas/ObjError"
+              meta:
+                type: object
+            required: [error, meta]

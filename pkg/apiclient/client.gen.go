@@ -14,30 +14,84 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// BotUser defines model for BotUser.
-type BotUser struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// ObjError Standard error
+type ObjError struct {
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	RequestId string `json:"request_id"`
 }
 
-// UpdateBotUserRequest defines model for UpdateBotUserRequest.
-type UpdateBotUserRequest struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// ObjUser Representation of user
+type ObjUser struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  *int64  `json:"tg_chat_id,omitempty"`
+	TgId      *int64  `json:"tg_id,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
-// GetAdminUsersParams defines parameters for GetAdminUsers.
-type GetAdminUsersParams struct {
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+// UserId defines model for UserId.
+type UserId = openapi_types.UUID
+
+// RespCreateUser defines model for RespCreateUser.
+type RespCreateUser struct {
+	Data struct {
+		// UserId Unique user identifier (UUID)
+		UserId openapi_types.UUID `json:"user_id"`
+	} `json:"data"`
 }
 
-// PutAdminUsersUserIdJSONRequestBody defines body for PutAdminUsersUserId for application/json ContentType.
-type PutAdminUsersUserIdJSONRequestBody = UpdateBotUserRequest
+// RespError defines model for RespError.
+type RespError struct {
+	// Error Standard error
+	Error ObjError               `json:"error"`
+	Meta  map[string]interface{} `json:"meta"`
+}
+
+// RespGetUser defines model for RespGetUser.
+type RespGetUser struct {
+	// Data Representation of user
+	Data ObjUser `json:"data"`
+}
+
+// RespUpdateUser defines model for RespUpdateUser.
+type RespUpdateUser struct {
+	// Data Representation of user
+	Data ObjUser `json:"data"`
+}
+
+// ReqCreateUser defines model for ReqCreateUser.
+type ReqCreateUser struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  int64   `json:"tg_chat_id"`
+	TgId      int64   `json:"tg_id"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// ReqUpdateUser defines model for ReqUpdateUser.
+type ReqUpdateUser struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  *int64  `json:"tg_chat_id,omitempty"`
+	TgId      *int64  `json:"tg_id,omitempty"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// V1CreateUserJSONBody defines parameters for V1CreateUser.
+type V1CreateUserJSONBody struct {
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	TgChatId  int64   `json:"tg_chat_id"`
+	TgId      int64   `json:"tg_id"`
+	Username  *string `json:"username,omitempty"`
+}
+
+// V1CreateUserJSONRequestBody defines body for V1CreateUser for application/json ContentType.
+type V1CreateUserJSONRequestBody V1CreateUserJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -112,17 +166,20 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetAdminUsers request
-	GetAdminUsers(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// V1CreateUserWithBody request with any body
+	V1CreateUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutAdminUsersUserIdWithBody request with any body
-	PutAdminUsersUserIdWithBody(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	V1CreateUser(ctx context.Context, body V1CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutAdminUsersUserId(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// V1GetUser request
+	V1GetUser(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// V1UpdateUser request
+	V1UpdateUser(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetAdminUsers(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAdminUsersRequest(c.Server, params)
+func (c *Client) V1CreateUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1CreateUserRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +190,8 @@ func (c *Client) GetAdminUsers(ctx context.Context, params *GetAdminUsersParams,
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutAdminUsersUserIdWithBody(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutAdminUsersUserIdRequestWithBody(c.Server, userId, contentType, body)
+func (c *Client) V1CreateUser(ctx context.Context, body V1CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1CreateUserRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +202,8 @@ func (c *Client) PutAdminUsersUserIdWithBody(ctx context.Context, userId int, co
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutAdminUsersUserId(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutAdminUsersUserIdRequest(c.Server, userId, body)
+func (c *Client) V1GetUser(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1GetUserRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -157,8 +214,31 @@ func (c *Client) PutAdminUsersUserId(ctx context.Context, userId int, body PutAd
 	return c.Client.Do(req)
 }
 
-// NewGetAdminUsersRequest generates requests for GetAdminUsers
-func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.Request, error) {
+func (c *Client) V1UpdateUser(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1UpdateUserRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewV1CreateUserRequest calls the generic V1CreateUser builder with application/json body
+func NewV1CreateUserRequest(server string, body V1CreateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewV1CreateUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewV1CreateUserRequestWithBody generates requests for V1CreateUser with any type of body
+func NewV1CreateUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -166,7 +246,7 @@ func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/admin/users")
+	operationPath := fmt.Sprintf("/api/v1/users")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -176,42 +256,40 @@ func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.
 		return nil, err
 	}
 
-	if params != nil {
-		queryValues := queryURL.Query()
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
 
-		if params.Limit != nil {
+	req.Header.Add("Content-Type", contentType)
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
+	return req, nil
+}
 
-		}
+// NewV1GetUserRequest generates requests for V1GetUser
+func NewV1GetUserRequest(server string, id UserId) (*http.Request, error) {
+	var err error
 
-		if params.Offset != nil {
+	var pathParam0 string
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
 
-		}
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
 
-		queryURL.RawQuery = queryValues.Encode()
+	operationPath := fmt.Sprintf("/api/v1/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -222,24 +300,13 @@ func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.
 	return req, nil
 }
 
-// NewPutAdminUsersUserIdRequest calls the generic PutAdminUsersUserId builder with application/json body
-func NewPutAdminUsersUserIdRequest(server string, userId int, body PutAdminUsersUserIdJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPutAdminUsersUserIdRequestWithBody(server, userId, "application/json", bodyReader)
-}
-
-// NewPutAdminUsersUserIdRequestWithBody generates requests for PutAdminUsersUserId with any type of body
-func NewPutAdminUsersUserIdRequestWithBody(server string, userId int, contentType string, body io.Reader) (*http.Request, error) {
+// NewV1UpdateUserRequest generates requests for V1UpdateUser
+func NewV1UpdateUserRequest(server string, id UserId) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_id", runtime.ParamLocationPath, userId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +316,7 @@ func NewPutAdminUsersUserIdRequestWithBody(server string, userId int, contentTyp
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/admin/users/%s", pathParam0)
+	operationPath := fmt.Sprintf("/api/v1/users/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -259,12 +326,10 @@ func NewPutAdminUsersUserIdRequestWithBody(server string, userId int, contentTyp
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -312,23 +377,27 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetAdminUsersWithResponse request
-	GetAdminUsersWithResponse(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*GetAdminUsersResponse, error)
+	// V1CreateUserWithBodyWithResponse request with any body
+	V1CreateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1CreateUserResponse, error)
 
-	// PutAdminUsersUserIdWithBodyWithResponse request with any body
-	PutAdminUsersUserIdWithBodyWithResponse(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error)
+	V1CreateUserWithResponse(ctx context.Context, body V1CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*V1CreateUserResponse, error)
 
-	PutAdminUsersUserIdWithResponse(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error)
+	// V1GetUserWithResponse request
+	V1GetUserWithResponse(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*V1GetUserResponse, error)
+
+	// V1UpdateUserWithResponse request
+	V1UpdateUserWithResponse(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*V1UpdateUserResponse, error)
 }
 
-type GetAdminUsersResponse struct {
+type V1CreateUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]BotUser
+	JSON200      *RespCreateUser
+	JSONDefault  *RespError
 }
 
 // Status returns HTTPResponse.Status
-func (r GetAdminUsersResponse) Status() string {
+func (r V1CreateUserResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -336,20 +405,22 @@ func (r GetAdminUsersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetAdminUsersResponse) StatusCode() int {
+func (r V1CreateUserResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PutAdminUsersUserIdResponse struct {
+type V1GetUserResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON200      *RespGetUser
+	JSONDefault  *RespError
 }
 
 // Status returns HTTPResponse.Status
-func (r PutAdminUsersUserIdResponse) Status() string {
+func (r V1GetUserResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -357,76 +428,165 @@ func (r PutAdminUsersUserIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutAdminUsersUserIdResponse) StatusCode() int {
+func (r V1GetUserResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetAdminUsersWithResponse request returning *GetAdminUsersResponse
-func (c *ClientWithResponses) GetAdminUsersWithResponse(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*GetAdminUsersResponse, error) {
-	rsp, err := c.GetAdminUsers(ctx, params, reqEditors...)
+type V1UpdateUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RespUpdateUser
+	JSONDefault  *RespError
+}
+
+// Status returns HTTPResponse.Status
+func (r V1UpdateUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r V1UpdateUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// V1CreateUserWithBodyWithResponse request with arbitrary body returning *V1CreateUserResponse
+func (c *ClientWithResponses) V1CreateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1CreateUserResponse, error) {
+	rsp, err := c.V1CreateUserWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetAdminUsersResponse(rsp)
+	return ParseV1CreateUserResponse(rsp)
 }
 
-// PutAdminUsersUserIdWithBodyWithResponse request with arbitrary body returning *PutAdminUsersUserIdResponse
-func (c *ClientWithResponses) PutAdminUsersUserIdWithBodyWithResponse(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error) {
-	rsp, err := c.PutAdminUsersUserIdWithBody(ctx, userId, contentType, body, reqEditors...)
+func (c *ClientWithResponses) V1CreateUserWithResponse(ctx context.Context, body V1CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*V1CreateUserResponse, error) {
+	rsp, err := c.V1CreateUser(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutAdminUsersUserIdResponse(rsp)
+	return ParseV1CreateUserResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutAdminUsersUserIdWithResponse(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error) {
-	rsp, err := c.PutAdminUsersUserId(ctx, userId, body, reqEditors...)
+// V1GetUserWithResponse request returning *V1GetUserResponse
+func (c *ClientWithResponses) V1GetUserWithResponse(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*V1GetUserResponse, error) {
+	rsp, err := c.V1GetUser(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutAdminUsersUserIdResponse(rsp)
+	return ParseV1GetUserResponse(rsp)
 }
 
-// ParseGetAdminUsersResponse parses an HTTP response from a GetAdminUsersWithResponse call
-func ParseGetAdminUsersResponse(rsp *http.Response) (*GetAdminUsersResponse, error) {
+// V1UpdateUserWithResponse request returning *V1UpdateUserResponse
+func (c *ClientWithResponses) V1UpdateUserWithResponse(ctx context.Context, id UserId, reqEditors ...RequestEditorFn) (*V1UpdateUserResponse, error) {
+	rsp, err := c.V1UpdateUser(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseV1UpdateUserResponse(rsp)
+}
+
+// ParseV1CreateUserResponse parses an HTTP response from a V1CreateUserWithResponse call
+func ParseV1CreateUserResponse(rsp *http.Response) (*V1CreateUserResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAdminUsersResponse{
+	response := &V1CreateUserResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []BotUser
+		var dest RespCreateUser
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest RespError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 
 	return response, nil
 }
 
-// ParsePutAdminUsersUserIdResponse parses an HTTP response from a PutAdminUsersUserIdWithResponse call
-func ParsePutAdminUsersUserIdResponse(rsp *http.Response) (*PutAdminUsersUserIdResponse, error) {
+// ParseV1GetUserResponse parses an HTTP response from a V1GetUserWithResponse call
+func ParseV1GetUserResponse(rsp *http.Response) (*V1GetUserResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutAdminUsersUserIdResponse{
+	response := &V1GetUserResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RespGetUser
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest RespError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseV1UpdateUserResponse parses an HTTP response from a V1UpdateUserWithResponse call
+func ParseV1UpdateUserResponse(rsp *http.Response) (*V1UpdateUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &V1UpdateUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RespUpdateUser
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest RespError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil

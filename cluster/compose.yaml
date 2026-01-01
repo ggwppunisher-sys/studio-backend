@@ -1,0 +1,20 @@
+name: studio-backend-um
+services:
+
+  postgres:
+    image: postgres:18.1-alpine3.23
+    restart: no
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: local_user
+      POSTGRES_PASSWORD: local_pass
+      POSTGRES_DB: um_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    command: > 
+      sh -c "chown -R postgres:postgres /var/lib/postgresql/data && exec docker-entrypoint.sh postgres"
+
+volumes:
+  pg_data:
