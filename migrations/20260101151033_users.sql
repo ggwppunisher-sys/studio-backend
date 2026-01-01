@@ -2,17 +2,17 @@
 -- +goose StatementBegin
 
 CREATE TABLE IF NOT EXISTS um.users (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- tg info
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    username VARCHAR(255),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    username VARCHAR(100),
     tg_id BIGINT,
     tg_chat_id BIGINT,
 
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- +goose StatementEnd
