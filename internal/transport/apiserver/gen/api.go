@@ -14,52 +14,69 @@ import (
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 )
 
-// BotUser defines model for BotUser.
-type BotUser struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// CreateUserRequest defines model for CreateUserRequest.
+type CreateUserRequest struct {
+	Chatid    int     `json:"chatid"`
+	Firstname *string `json:"firstname,omitempty"`
+	Id        int     `json:"id"`
+	Lastname  *string `json:"lastname,omitempty"`
+	Username  string  `json:"username"`
 }
 
-// UpdateBotUserRequest defines model for UpdateBotUserRequest.
-type UpdateBotUserRequest struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// UpdateUserRequest defines model for UpdateUserRequest.
+type UpdateUserRequest struct {
+	Firstname *string `json:"firstname,omitempty"`
+	Lastname  *string `json:"lastname,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
-// GetAdminUsersParams defines parameters for GetAdminUsers.
-type GetAdminUsersParams struct {
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+// User defines model for User.
+type User struct {
+	Chatid    *int    `json:"chatid,omitempty"`
+	Firstname *string `json:"firstname,omitempty"`
+	Id        *int    `json:"id,omitempty"`
+	Lastname  *string `json:"lastname,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
-// PutAdminUsersUserIdJSONRequestBody defines body for PutAdminUsersUserId for application/json ContentType.
-type PutAdminUsersUserIdJSONRequestBody = UpdateBotUserRequest
+// PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
+type PostUsersJSONRequestBody = CreateUserRequest
+
+// PutUsersIdJSONRequestBody defines body for PutUsersId for application/json ContentType.
+type PutUsersIdJSONRequestBody = UpdateUserRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Получить список пользователей бота
-	// (GET /admin/users)
-	GetAdminUsers(w http.ResponseWriter, r *http.Request, params GetAdminUsersParams)
-	// Обновить данный пользователя
-	// (PUT /admin/users/{user_id})
-	PutAdminUsersUserId(w http.ResponseWriter, r *http.Request, userId int)
+	// Создать пользователя
+	// (POST /users)
+	PostUsers(w http.ResponseWriter, r *http.Request)
+	// Получить пользователя по ID
+	// (GET /users/{id})
+	GetUsersId(w http.ResponseWriter, r *http.Request, id int)
+	// Обновить пользователя
+	// (PUT /users/{id})
+	PutUsersId(w http.ResponseWriter, r *http.Request, id int)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
-// Получить список пользователей бота
-// (GET /admin/users)
-func (_ Unimplemented) GetAdminUsers(w http.ResponseWriter, r *http.Request, params GetAdminUsersParams) {
+// Создать пользователя
+// (POST /users)
+func (_ Unimplemented) PostUsers(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Обновить данный пользователя
-// (PUT /admin/users/{user_id})
-func (_ Unimplemented) PutAdminUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
+// Получить пользователя по ID
+// (GET /users/{id})
+func (_ Unimplemented) GetUsersId(w http.ResponseWriter, r *http.Request, id int) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Обновить пользователя
+// (PUT /users/{id})
+func (_ Unimplemented) PutUsersId(w http.ResponseWriter, r *http.Request, id int) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -72,32 +89,11 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// GetAdminUsers operation middleware
-func (siw *ServerInterfaceWrapper) GetAdminUsers(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetAdminUsersParams
-
-	// ------------- Optional query parameter "limit" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "offset" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
-		return
-	}
+// PostUsers operation middleware
+func (siw *ServerInterfaceWrapper) PostUsers(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAdminUsers(w, r, params)
+		siw.Handler.PostUsers(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -107,22 +103,47 @@ func (siw *ServerInterfaceWrapper) GetAdminUsers(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
-// PutAdminUsersUserId operation middleware
-func (siw *ServerInterfaceWrapper) PutAdminUsersUserId(w http.ResponseWriter, r *http.Request) {
+// GetUsersId operation middleware
+func (siw *ServerInterfaceWrapper) GetUsersId(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
-	// ------------- Path parameter "user_id" -------------
-	var userId int
+	// ------------- Path parameter "id" -------------
+	var id int
 
-	err = runtime.BindStyledParameterWithOptions("simple", "user_id", chi.URLParam(r, "user_id"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "user_id", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PutAdminUsersUserId(w, r, userId)
+		siw.Handler.GetUsersId(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutUsersId operation middleware
+func (siw *ServerInterfaceWrapper) PutUsersId(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutUsersId(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -246,57 +267,113 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/admin/users", wrapper.GetAdminUsers)
+		r.Post(options.BaseURL+"/users", wrapper.PostUsers)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/admin/users/{user_id}", wrapper.PutAdminUsersUserId)
+		r.Get(options.BaseURL+"/users/{id}", wrapper.GetUsersId)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/users/{id}", wrapper.PutUsersId)
 	})
 
 	return r
 }
 
-type GetAdminUsersRequestObject struct {
-	Params GetAdminUsersParams
+type PostUsersRequestObject struct {
+	Body *PostUsersJSONRequestBody
 }
 
-type GetAdminUsersResponseObject interface {
-	VisitGetAdminUsersResponse(w http.ResponseWriter) error
+type PostUsersResponseObject interface {
+	VisitPostUsersResponse(w http.ResponseWriter) error
 }
 
-type GetAdminUsers200JSONResponse []BotUser
+type PostUsers201JSONResponse User
 
-func (response GetAdminUsers200JSONResponse) VisitGetAdminUsersResponse(w http.ResponseWriter) error {
+func (response PostUsers201JSONResponse) VisitPostUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostUsers400Response struct {
+}
+
+func (response PostUsers400Response) VisitPostUsersResponse(w http.ResponseWriter) error {
+	w.WriteHeader(400)
+	return nil
+}
+
+type GetUsersIdRequestObject struct {
+	Id int `json:"id"`
+}
+
+type GetUsersIdResponseObject interface {
+	VisitGetUsersIdResponse(w http.ResponseWriter) error
+}
+
+type GetUsersId200JSONResponse User
+
+func (response GetUsersId200JSONResponse) VisitGetUsersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type PutAdminUsersUserIdRequestObject struct {
-	UserId int `json:"user_id"`
-	Body   *PutAdminUsersUserIdJSONRequestBody
+type GetUsersId404Response struct {
 }
 
-type PutAdminUsersUserIdResponseObject interface {
-	VisitPutAdminUsersUserIdResponse(w http.ResponseWriter) error
+func (response GetUsersId404Response) VisitGetUsersIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(404)
+	return nil
 }
 
-type PutAdminUsersUserId200Response struct {
+type PutUsersIdRequestObject struct {
+	Id   int `json:"id"`
+	Body *PutUsersIdJSONRequestBody
 }
 
-func (response PutAdminUsersUserId200Response) VisitPutAdminUsersUserIdResponse(w http.ResponseWriter) error {
+type PutUsersIdResponseObject interface {
+	VisitPutUsersIdResponse(w http.ResponseWriter) error
+}
+
+type PutUsersId200JSONResponse User
+
+func (response PutUsersId200JSONResponse) VisitPutUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PutUsersId400Response struct {
+}
+
+func (response PutUsersId400Response) VisitPutUsersIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(400)
+	return nil
+}
+
+type PutUsersId404Response struct {
+}
+
+func (response PutUsersId404Response) VisitPutUsersIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(404)
 	return nil
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// Получить список пользователей бота
-	// (GET /admin/users)
-	GetAdminUsers(ctx context.Context, request GetAdminUsersRequestObject) (GetAdminUsersResponseObject, error)
-	// Обновить данный пользователя
-	// (PUT /admin/users/{user_id})
-	PutAdminUsersUserId(ctx context.Context, request PutAdminUsersUserIdRequestObject) (PutAdminUsersUserIdResponseObject, error)
+	// Создать пользователя
+	// (POST /users)
+	PostUsers(ctx context.Context, request PostUsersRequestObject) (PostUsersResponseObject, error)
+	// Получить пользователя по ID
+	// (GET /users/{id})
+	GetUsersId(ctx context.Context, request GetUsersIdRequestObject) (GetUsersIdResponseObject, error)
+	// Обновить пользователя
+	// (PUT /users/{id})
+	PutUsersId(ctx context.Context, request PutUsersIdRequestObject) (PutUsersIdResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -328,39 +405,11 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
-// GetAdminUsers operation middleware
-func (sh *strictHandler) GetAdminUsers(w http.ResponseWriter, r *http.Request, params GetAdminUsersParams) {
-	var request GetAdminUsersRequestObject
+// PostUsers operation middleware
+func (sh *strictHandler) PostUsers(w http.ResponseWriter, r *http.Request) {
+	var request PostUsersRequestObject
 
-	request.Params = params
-
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAdminUsers(ctx, request.(GetAdminUsersRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetAdminUsers")
-	}
-
-	response, err := handler(r.Context(), w, r, request)
-
-	if err != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(GetAdminUsersResponseObject); ok {
-		if err := validResponse.VisitGetAdminUsersResponse(w); err != nil {
-			sh.options.ResponseErrorHandlerFunc(w, r, err)
-		}
-	} else if response != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// PutAdminUsersUserId operation middleware
-func (sh *strictHandler) PutAdminUsersUserId(w http.ResponseWriter, r *http.Request, userId int) {
-	var request PutAdminUsersUserIdRequestObject
-
-	request.UserId = userId
-
-	var body PutAdminUsersUserIdJSONRequestBody
+	var body PostUsersJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
 		return
@@ -368,18 +417,77 @@ func (sh *strictHandler) PutAdminUsersUserId(w http.ResponseWriter, r *http.Requ
 	request.Body = &body
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.PutAdminUsersUserId(ctx, request.(PutAdminUsersUserIdRequestObject))
+		return sh.ssi.PostUsers(ctx, request.(PostUsersRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PutAdminUsersUserId")
+		handler = middleware(handler, "PostUsers")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(PutAdminUsersUserIdResponseObject); ok {
-		if err := validResponse.VisitPutAdminUsersUserIdResponse(w); err != nil {
+	} else if validResponse, ok := response.(PostUsersResponseObject); ok {
+		if err := validResponse.VisitPostUsersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetUsersId operation middleware
+func (sh *strictHandler) GetUsersId(w http.ResponseWriter, r *http.Request, id int) {
+	var request GetUsersIdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetUsersId(ctx, request.(GetUsersIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetUsersId")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetUsersIdResponseObject); ok {
+		if err := validResponse.VisitGetUsersIdResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutUsersId operation middleware
+func (sh *strictHandler) PutUsersId(w http.ResponseWriter, r *http.Request, id int) {
+	var request PutUsersIdRequestObject
+
+	request.Id = id
+
+	var body PutUsersIdJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutUsersId(ctx, request.(PutUsersIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutUsersId")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutUsersIdResponseObject); ok {
+		if err := validResponse.VisitPutUsersIdResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
