@@ -16,28 +16,36 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
-// BotUser defines model for BotUser.
-type BotUser struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// CreateUserRequest defines model for CreateUserRequest.
+type CreateUserRequest struct {
+	Chatid    int     `json:"chatid"`
+	Firstname *string `json:"firstname,omitempty"`
+	Id        int     `json:"id"`
+	Lastname  *string `json:"lastname,omitempty"`
+	Username  string  `json:"username"`
 }
 
-// UpdateBotUserRequest defines model for UpdateBotUserRequest.
-type UpdateBotUserRequest struct {
-	ListOfRecordings *string `json:"ListOfRecordings,omitempty"`
-	TgChatId         *int    `json:"TgChatId,omitempty"`
-	TgId             *string `json:"TgId,omitempty"`
+// UpdateUserRequest defines model for UpdateUserRequest.
+type UpdateUserRequest struct {
+	Firstname *string `json:"firstname,omitempty"`
+	Lastname  *string `json:"lastname,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
-// GetAdminUsersParams defines parameters for GetAdminUsers.
-type GetAdminUsersParams struct {
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+// User defines model for User.
+type User struct {
+	Chatid    *int    `json:"chatid,omitempty"`
+	Firstname *string `json:"firstname,omitempty"`
+	Id        *int    `json:"id,omitempty"`
+	Lastname  *string `json:"lastname,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
-// PutAdminUsersUserIdJSONRequestBody defines body for PutAdminUsersUserId for application/json ContentType.
-type PutAdminUsersUserIdJSONRequestBody = UpdateBotUserRequest
+// PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
+type PostUsersJSONRequestBody = CreateUserRequest
+
+// PutUsersIdJSONRequestBody defines body for PutUsersId for application/json ContentType.
+type PutUsersIdJSONRequestBody = UpdateUserRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -112,17 +120,22 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetAdminUsers request
-	GetAdminUsers(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostUsersWithBody request with any body
+	PostUsersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutAdminUsersUserIdWithBody request with any body
-	PutAdminUsersUserIdWithBody(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostUsers(ctx context.Context, body PostUsersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutAdminUsersUserId(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetUsersId request
+	GetUsersId(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutUsersIdWithBody request with any body
+	PutUsersIdWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutUsersId(ctx context.Context, id int, body PutUsersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetAdminUsers(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAdminUsersRequest(c.Server, params)
+func (c *Client) PostUsersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUsersRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +146,8 @@ func (c *Client) GetAdminUsers(ctx context.Context, params *GetAdminUsersParams,
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutAdminUsersUserIdWithBody(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutAdminUsersUserIdRequestWithBody(c.Server, userId, contentType, body)
+func (c *Client) PostUsers(ctx context.Context, body PostUsersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUsersRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +158,8 @@ func (c *Client) PutAdminUsersUserIdWithBody(ctx context.Context, userId int, co
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutAdminUsersUserId(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutAdminUsersUserIdRequest(c.Server, userId, body)
+func (c *Client) GetUsersId(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUsersIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -157,8 +170,43 @@ func (c *Client) PutAdminUsersUserId(ctx context.Context, userId int, body PutAd
 	return c.Client.Do(req)
 }
 
-// NewGetAdminUsersRequest generates requests for GetAdminUsers
-func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.Request, error) {
+func (c *Client) PutUsersIdWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutUsersIdRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutUsersId(ctx context.Context, id int, body PutUsersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutUsersIdRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewPostUsersRequest calls the generic PostUsers builder with application/json body
+func NewPostUsersRequest(server string, body PostUsersJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostUsersRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostUsersRequestWithBody generates requests for PostUsers with any type of body
+func NewPostUsersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -166,7 +214,7 @@ func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/admin/users")
+	operationPath := fmt.Sprintf("/users")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -176,42 +224,40 @@ func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.
 		return nil, err
 	}
 
-	if params != nil {
-		queryValues := queryURL.Query()
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
 
-		if params.Limit != nil {
+	req.Header.Add("Content-Type", contentType)
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
+	return req, nil
+}
 
-		}
+// NewGetUsersIdRequest generates requests for GetUsersId
+func NewGetUsersIdRequest(server string, id int) (*http.Request, error) {
+	var err error
 
-		if params.Offset != nil {
+	var pathParam0 string
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
 
-		}
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
 
-		queryURL.RawQuery = queryValues.Encode()
+	operationPath := fmt.Sprintf("/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -222,24 +268,24 @@ func NewGetAdminUsersRequest(server string, params *GetAdminUsersParams) (*http.
 	return req, nil
 }
 
-// NewPutAdminUsersUserIdRequest calls the generic PutAdminUsersUserId builder with application/json body
-func NewPutAdminUsersUserIdRequest(server string, userId int, body PutAdminUsersUserIdJSONRequestBody) (*http.Request, error) {
+// NewPutUsersIdRequest calls the generic PutUsersId builder with application/json body
+func NewPutUsersIdRequest(server string, id int, body PutUsersIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutAdminUsersUserIdRequestWithBody(server, userId, "application/json", bodyReader)
+	return NewPutUsersIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPutAdminUsersUserIdRequestWithBody generates requests for PutAdminUsersUserId with any type of body
-func NewPutAdminUsersUserIdRequestWithBody(server string, userId int, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutUsersIdRequestWithBody generates requests for PutUsersId with any type of body
+func NewPutUsersIdRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "user_id", runtime.ParamLocationPath, userId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +295,7 @@ func NewPutAdminUsersUserIdRequestWithBody(server string, userId int, contentTyp
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/admin/users/%s", pathParam0)
+	operationPath := fmt.Sprintf("/users/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -312,23 +358,28 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetAdminUsersWithResponse request
-	GetAdminUsersWithResponse(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*GetAdminUsersResponse, error)
+	// PostUsersWithBodyWithResponse request with any body
+	PostUsersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUsersResponse, error)
 
-	// PutAdminUsersUserIdWithBodyWithResponse request with any body
-	PutAdminUsersUserIdWithBodyWithResponse(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error)
+	PostUsersWithResponse(ctx context.Context, body PostUsersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUsersResponse, error)
 
-	PutAdminUsersUserIdWithResponse(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error)
+	// GetUsersIdWithResponse request
+	GetUsersIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetUsersIdResponse, error)
+
+	// PutUsersIdWithBodyWithResponse request with any body
+	PutUsersIdWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutUsersIdResponse, error)
+
+	PutUsersIdWithResponse(ctx context.Context, id int, body PutUsersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutUsersIdResponse, error)
 }
 
-type GetAdminUsersResponse struct {
+type PostUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]BotUser
+	JSON201      *User
 }
 
 // Status returns HTTPResponse.Status
-func (r GetAdminUsersResponse) Status() string {
+func (r PostUsersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -336,20 +387,21 @@ func (r GetAdminUsersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetAdminUsersResponse) StatusCode() int {
+func (r PostUsersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PutAdminUsersUserIdResponse struct {
+type GetUsersIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON200      *User
 }
 
 // Status returns HTTPResponse.Status
-func (r PutAdminUsersUserIdResponse) Status() string {
+func (r GetUsersIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -357,55 +409,120 @@ func (r PutAdminUsersUserIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutAdminUsersUserIdResponse) StatusCode() int {
+func (r GetUsersIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetAdminUsersWithResponse request returning *GetAdminUsersResponse
-func (c *ClientWithResponses) GetAdminUsersWithResponse(ctx context.Context, params *GetAdminUsersParams, reqEditors ...RequestEditorFn) (*GetAdminUsersResponse, error) {
-	rsp, err := c.GetAdminUsers(ctx, params, reqEditors...)
+type PutUsersIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *User
+}
+
+// Status returns HTTPResponse.Status
+func (r PutUsersIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutUsersIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// PostUsersWithBodyWithResponse request with arbitrary body returning *PostUsersResponse
+func (c *ClientWithResponses) PostUsersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUsersResponse, error) {
+	rsp, err := c.PostUsersWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetAdminUsersResponse(rsp)
+	return ParsePostUsersResponse(rsp)
 }
 
-// PutAdminUsersUserIdWithBodyWithResponse request with arbitrary body returning *PutAdminUsersUserIdResponse
-func (c *ClientWithResponses) PutAdminUsersUserIdWithBodyWithResponse(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error) {
-	rsp, err := c.PutAdminUsersUserIdWithBody(ctx, userId, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostUsersWithResponse(ctx context.Context, body PostUsersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUsersResponse, error) {
+	rsp, err := c.PostUsers(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutAdminUsersUserIdResponse(rsp)
+	return ParsePostUsersResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutAdminUsersUserIdWithResponse(ctx context.Context, userId int, body PutAdminUsersUserIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutAdminUsersUserIdResponse, error) {
-	rsp, err := c.PutAdminUsersUserId(ctx, userId, body, reqEditors...)
+// GetUsersIdWithResponse request returning *GetUsersIdResponse
+func (c *ClientWithResponses) GetUsersIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetUsersIdResponse, error) {
+	rsp, err := c.GetUsersId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutAdminUsersUserIdResponse(rsp)
+	return ParseGetUsersIdResponse(rsp)
 }
 
-// ParseGetAdminUsersResponse parses an HTTP response from a GetAdminUsersWithResponse call
-func ParseGetAdminUsersResponse(rsp *http.Response) (*GetAdminUsersResponse, error) {
+// PutUsersIdWithBodyWithResponse request with arbitrary body returning *PutUsersIdResponse
+func (c *ClientWithResponses) PutUsersIdWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutUsersIdResponse, error) {
+	rsp, err := c.PutUsersIdWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutUsersIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutUsersIdWithResponse(ctx context.Context, id int, body PutUsersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutUsersIdResponse, error) {
+	rsp, err := c.PutUsersId(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutUsersIdResponse(rsp)
+}
+
+// ParsePostUsersResponse parses an HTTP response from a PostUsersWithResponse call
+func ParsePostUsersResponse(rsp *http.Response) (*PostUsersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAdminUsersResponse{
+	response := &PostUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUsersIdResponse parses an HTTP response from a GetUsersIdWithResponse call
+func ParseGetUsersIdResponse(rsp *http.Response) (*GetUsersIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUsersIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []BotUser
+		var dest User
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -416,17 +533,27 @@ func ParseGetAdminUsersResponse(rsp *http.Response) (*GetAdminUsersResponse, err
 	return response, nil
 }
 
-// ParsePutAdminUsersUserIdResponse parses an HTTP response from a PutAdminUsersUserIdWithResponse call
-func ParsePutAdminUsersUserIdResponse(rsp *http.Response) (*PutAdminUsersUserIdResponse, error) {
+// ParsePutUsersIdResponse parses an HTTP response from a PutUsersIdWithResponse call
+func ParsePutUsersIdResponse(rsp *http.Response) (*PutUsersIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutAdminUsersUserIdResponse{
+	response := &PutUsersIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	}
 
 	return response, nil
