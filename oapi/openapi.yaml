@@ -1,84 +1,139 @@
 openapi: 3.0.3
-info: 
-  title: Telegram Bot Admin API
-  description: Админка для управления ботом и пользователями 
+info:
+  title: Users API
+  description: API для управления пользователями
   version: 1.0.0
-  
 
 servers:
   - url: http://localhost:8080
-    description: Локальный сервер разработки 
 
 paths:
-  /api/v1/admin/users:
+  /users:
+    post:
+      summary: Создать пользователя
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Некорректный запрос
+
+  /users/{id}:
     get:
-      operationId: getAdminUsers
-      summary: Получить список пользователей бота 
-      tags: [admin]
-      parameters: 
-        - name: limit 
-          in: query 
+      summary: Получить пользователя по ID
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
           schema:
             type: integer
-            default: 50
-        - name: offset 
-          in: query 
-          schema: 
-            type: integer 
-            default: 0
-      responses: 
-        '200':
-          description: Список пользователей 
-          content: 
-            application/json:
-              schema: 
-                type: array 
-                items: 
-                  $ref: '#/components/schemas/BotUser'
-
-  /admin/users/{user_id}:
-    put: 
-      summary: Обновить данный пользователя
-      tags: [admin]
-      parameters:
-        - name: user_id
-          in: path 
-          required: true 
-          schema: 
-            type: integer 
-      requestBody: 
-        required: true 
-        content: 
-          application/json:
-            schema: 
-              $ref: '#/components/schemas/UpdateBotUserRequest'
+            example: 1
       responses:
-        '200':
-          description: Пользователь обновлен 
+        "200":
+          description: Пользователь найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Пользователь не найден
+
+    put:
+      summary: Обновить пользователя
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Пользователь обновлён
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Некорректный запрос
+        "404":
+          description: Пользователь не найден
 
 components:
-  schemas: 
-    BotUser:
-      type : object 
-      properties: 
-        TgId:
-          type: string 
-          example: "ugawen"
-        TgChatId:
-          type: integer 
-          example: 123456
-        ListOfRecordings: 
-          type : string 
-          example: "21 ноября в 16:00"
-
-    UpdateBotUserRequest:
+  schemas:
+    User:
       type: object
       properties:
-        TgId:
-          type: string
-        TgChatId:
+        id:
           type: integer
-        ListOfRecordings:
-          type: string     
+          example: 1
+        firstname:
+          type: string 
+          example: Ivan
+        lastname:
+          type: string
+          example: Ivanov
+        username:
+          type: string
+          example: ivan2200
+        chatid:
+          type: integer
+          example: 1
 
+    CreateUserRequest:
+      type: object
+      required:
+        - id 
+        - username
+        - chatid
+      properties:
+        id:
+          type: integer
+          example: 1
+        firstname:
+          type: string
+          example: Ivan
+        lastname:
+          type: string 
+          example: Ivanov
+        username:
+          type: string
+          example: ivan2200
+        chatid:
+          type: integer 
+          example: 1
 
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstname:
+          type: string
+          example: Ivan Updated
+        lastname: 
+          type: string 
+          exmaple: Ivanov Updated 
+        username:
+          type: string
+          example: ivanupdated
+      
