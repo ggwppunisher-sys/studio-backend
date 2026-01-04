@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"studio-backend/internal/domain"
 	"studio-backend/internal/transport/apiserver/gen"
 	createUser "studio-backend/internal/usecase/create_user"
@@ -22,6 +23,9 @@ func (si *StrictImplementation) V1CreateUser(
 	request gen.V1CreateUserRequestObject,
 ) (gen.V1CreateUserResponseObject, error) {
 	body := request.Body
+	if body == nil {
+		return nil, fmt.Errorf("request body is empty")
+	}
 	user := domain.User{
 		TgUserInfo: domain.TgUserInfo{
 			TgId:      body.TgId,
@@ -31,11 +35,18 @@ func (si *StrictImplementation) V1CreateUser(
 			TgChatId:  body.TgChatId,
 		},
 	}
-	err := si.userUseCase.Create(ctx, user)
+	createdID, err := si.userUseCase.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
-	return gen.V1CreateUser200JSONResponse{}, nil
+
+	resp := gen.RespCreateUserJSONResponse{}
+
+	resp.Data.UserId = createdID
+
+	return gen.V1CreateUser200JSONResponse{
+		RespCreateUserJSONResponse: resp,
+	}, nil
 }
 
 func valOrEmpty(ptr *string) string {
@@ -49,6 +60,7 @@ func (si *StrictImplementation) V1GetUser(
 	_ context.Context,
 	_ gen.V1GetUserRequestObject,
 ) (gen.V1GetUserResponseObject, error) {
+
 	return nil, domain.ErrNotImplemented
 }
 

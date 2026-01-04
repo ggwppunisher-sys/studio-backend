@@ -20,14 +20,14 @@ func New(saver UserSaver) *UseCase {
 	}
 }
 
-func (uc *UseCase) Create(ctx context.Context, user domain.User) error {
+func (uc *UseCase) Create(ctx context.Context, user domain.User) (uuid.UUID, error) {
 	user.Id = uuid.New()
 	if err := user.Validate(); err != nil {
-		return err
+		return uuid.Nil, err
 	}
 	_, err := uc.saver.SaveUser(ctx, user)
 	if err != nil {
-		return err
+		return uuid.Nil, err
 	}
-	return nil
+	return user.Id, nil
 }
