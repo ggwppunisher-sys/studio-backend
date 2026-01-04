@@ -4,19 +4,45 @@ import (
 	"context"
 	"studio-backend/internal/domain"
 	"studio-backend/internal/transport/apiserver/gen"
+	createUser "studio-backend/internal/usecase/create_user"
 )
 
-type StrictImplementation struct{}
+type StrictImplementation struct {
+	userUseCase *createUser.UseCase
+}
 
-func NewStrictImplementation() *StrictImplementation {
-	return &StrictImplementation{}
+func NewStrictImplementation(u *createUser.UseCase) *StrictImplementation {
+	return &StrictImplementation{
+		userUseCase: u,
+	}
 }
 
 func (si *StrictImplementation) V1CreateUser(
-	_ context.Context,
-	_ gen.V1CreateUserRequestObject,
+	ctx context.Context,
+	request gen.V1CreateUserRequestObject,
 ) (gen.V1CreateUserResponseObject, error) {
-	return nil, domain.ErrNotImplemented
+	body := request.Body
+	user := domain.User{
+		TgUserInfo: domain.TgUserInfo{
+			TgId:      body.TgId,
+			Username:  valOrEmpty(body.Username),
+			FirstName: valOrEmpty(body.FirstName),
+			LastName:  valOrEmpty(body.LastName),
+			TgChatId:  body.TgChatId,
+		},
+	}
+	err := si.userUseCase.Create(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return gen.V1CreateUser200JSONResponse{}, nil
+}
+
+func valOrEmpty(ptr *string) string {
+	if ptr != nil {
+		return *ptr
+	}
+	return ""
 }
 
 func (si *StrictImplementation) V1GetUser(
