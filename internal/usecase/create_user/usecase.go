@@ -9,6 +9,8 @@ import (
 
 type UserSaver interface {
 	SaveUser(ctx context.Context, user domain.User) (int64, error)
+	GetUser(ctx context.Context, id uuid.UUID) (domain.User, error)
+	UpdateUser(ctx context.Context, user domain.User) error
 }
 type UseCase struct {
 	saver UserSaver
@@ -30,4 +32,11 @@ func (uc *UseCase) Create(ctx context.Context, user domain.User) (uuid.UUID, err
 		return uuid.Nil, err
 	}
 	return user.Id, nil
+}
+
+func (uc *UseCase) Get(ctx context.Context, id uuid.UUID) (domain.User, error) {
+	return uc.saver.GetUser(ctx, id)
+}
+func (uc *UseCase) Update(ctx context.Context, user domain.User) error {
+	return uc.saver.UpdateUser(ctx, user)
 }
